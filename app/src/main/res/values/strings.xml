@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">技能競賽氣象站</string>
+    <string name="cloudy">多雲</string>
+    <string name="sunny">晴天</string>
+    <string name="overcast">陰天</string>
+    <string name="rain">雨天</string>
+    <string name="thunder">打雷</string>
+</resources>
