@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -60,32 +59,14 @@ import java.util.Locale
 fun ListScreen(viewModel: MainViewModel) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("App08",Context.MODE_PRIVATE)
-    val cityListOriginal = remember {
-        parseCityXml(context.resources.getXml(R.xml.city_list))
-    }
-    val userCityList = remember { mutableStateListOf<City>() }
     var changeOrderMode by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        val jsonArray = JSONArray(sharedPreferences.getString("userCityList", "[]"))
-        for (i in 0 until jsonArray.length()) {
-            val obj = jsonArray.getJSONObject(i)
-            userCityList.add(
-                City(
-                    obj.getString("name"),
-                    obj.getString("nameEn"),
-                    obj.getString("fileName")
-                )
-            )
-        }
-        userCityList.apply { if (isEmpty()) userCityList.add(cityListOriginal.first())}
-    }
     var searchText by remember { mutableStateOf("") }
     val filteredCityList by remember {
         derivedStateOf {
             if (searchText.isBlank()) {
                 emptyList()
             } else {
-                cityListOriginal.filter {
+                viewModel.cityListOriginal.filter {
                     it.name.contains(searchText) ||
                             it.nameEn.contains(searchText, ignoreCase = true)
                 }
@@ -97,6 +78,7 @@ fun ListScreen(viewModel: MainViewModel) {
             .padding(18.dp, 0.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        VSpacer(12.dp)
         var expanded by remember { mutableStateOf(false) }
         Box(
             modifier = Modifier
@@ -144,22 +126,12 @@ fun ListScreen(viewModel: MainViewModel) {
         )
         Spacer(Modifier.height(8.dp))
         if (searchText.isBlank()) {
-            userCityList.forEachIndexed { index, city ->
+            viewModel.userCityList.forEachIndexed { index, city ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (changeOrderMode && index != 0) {
                         Button(
                             onClick = {
-                                userCityList.removeAt(index)
-                                val jsonArray = JSONArray()
-                                userCityList.forEach { city ->
-                                    val jsonObject = JSONObject()
-                                    jsonObject.put("name", city.name)
-                                    jsonObject.put("nameEn", city.nameEn)
-                                    jsonObject.put("fileName", city.fileName)
-
-                                    jsonArray.put(jsonObject)
-                                }
-                                sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                                viewModel.removeCity(index)
                             },
                             modifier = Modifier
                                 .height(140.dp)
@@ -179,10 +151,10 @@ fun ListScreen(viewModel: MainViewModel) {
                     Column(modifier = Modifier.weight(1f)) {
                         WeatherListItem(
                             context = context,
-                            item = city,
+                            weatherData = viewModel.getWeatherData(city.fileName.dropLast(4)),
                             onSwitch = {
                                 viewModel.push {
-                                    DetailPager(viewModel, userCityList, index)
+                                    DetailPager(viewModel, viewModel.userCityList, index)
                                 }
                             }
                         )
@@ -191,19 +163,7 @@ fun ListScreen(viewModel: MainViewModel) {
                         Column {
                             Button(
                                 onClick = {
-                                    val tmp = city
-                                    userCityList[index] = userCityList[index-1]
-                                    userCityList[index-1] = tmp
-                                    val jsonArray = JSONArray()
-                                    userCityList.forEach { city ->
-                                        val jsonObject = JSONObject()
-                                        jsonObject.put("name", city.name)
-                                        jsonObject.put("nameEn", city.nameEn)
-                                        jsonObject.put("fileName", city.fileName)
-
-                                        jsonArray.put(jsonObject)
-                                    }
-                                    sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                                    viewModel.moveCity(index,index-1)
                                 },
                                 modifier = Modifier
                                     .height(70.dp)
@@ -221,19 +181,7 @@ fun ListScreen(viewModel: MainViewModel) {
                             }
                             Button(
                                 onClick = {
-                                    val tmp = city
-                                    userCityList[index] = userCityList[index+1]
-                                    userCityList[index+1] = tmp
-                                    val jsonArray = JSONArray()
-                                    userCityList.forEach { city ->
-                                        val jsonObject = JSONObject()
-                                        jsonObject.put("name", city.name)
-                                        jsonObject.put("nameEn", city.nameEn)
-                                        jsonObject.put("fileName", city.fileName)
-
-                                        jsonArray.put(jsonObject)
-                                    }
-                                    sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                                    viewModel.moveCity(index,index+1)
                                 },
                                 modifier = Modifier
                                     .height(70.dp)
@@ -241,7 +189,7 @@ fun ListScreen(viewModel: MainViewModel) {
                                     .width(40.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 contentPadding = PaddingValues(0.dp),
-                                enabled = index != userCityList.count()-1
+                                enabled = index != viewModel.userCityList.count()-1
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.baseline_keyboard_arrow_down_24),
@@ -259,24 +207,14 @@ fun ListScreen(viewModel: MainViewModel) {
                     Column(modifier = Modifier.weight(1f)) {
                         WeatherListItem(
                             context = context,
-                            item = city,
+                            weatherData = viewModel.getWeatherData(city.fileName.dropLast(4)),
                             onSwitch = {}
                         )
                     }
-                    if (!userCityList.contains(city)) {
+                    if (!viewModel.userCityList.contains(city)) {
                         Button(
                             onClick = {
-                                userCityList.add(city)
-                                val jsonArray = JSONArray()
-                                userCityList.forEach { city ->
-                                    val jsonObject = JSONObject()
-                                    jsonObject.put("name", city.name)
-                                    jsonObject.put("nameEn", city.nameEn)
-                                    jsonObject.put("fileName", city.fileName)
-
-                                    jsonArray.put(jsonObject)
-                                }
-                                sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                                viewModel.addCity(city)
                                 searchText = ""
 
                             },
@@ -301,14 +239,7 @@ fun ListScreen(viewModel: MainViewModel) {
 }
 
 @Composable
-fun WeatherListItem(context: Context,item: City,onSwitch: () -> Unit) {
-    val weatherData = parseWeatherData(context.resources.getXml(
-        context.resources.getIdentifier(
-            item.fileName.dropLast(4),
-            "xml",
-            context.packageName
-        )
-    ))
+fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Unit) {
     val currentDate = Date()
     val nowHour = SimpleDateFormat("HH:00", Locale.getDefault()).format(currentDate)
     val nowHourlyForecast =
@@ -336,7 +267,7 @@ fun WeatherListItem(context: Context,item: City,onSwitch: () -> Unit) {
             Column (
                 modifier = Modifier.weight(.5f).padding(12.dp),
             ){
-                if (item.fileName == "current.xml") {
+                if (weatherData.isCurrent) {
                     Text(
                         text = "當前位置",
                         fontSize = 18.sp,
@@ -344,7 +275,7 @@ fun WeatherListItem(context: Context,item: City,onSwitch: () -> Unit) {
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
                     )
                     Text(
-                        text = item.name,
+                        text = weatherData.currentWeather.city,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
@@ -352,7 +283,7 @@ fun WeatherListItem(context: Context,item: City,onSwitch: () -> Unit) {
                     )
                 } else {
                     Text(
-                        text = item.name,
+                        text = weatherData.currentWeather.city,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White
@@ -407,5 +338,5 @@ fun WeatherListItem(context: Context,item: City,onSwitch: () -> Unit) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ListPreview() {
-    ListScreen(MainViewModel())
+    ListScreen(MainViewModel().apply{initialize(LocalContext.current)})
 }

@@ -26,45 +26,51 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DetailPager(viewModel: MainViewModel,city: List<City>,initPage: Int) {
+fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
     val pagerState = rememberPagerState(pageCount = {
         city.count()
     }, initialPage = initPage)
-    Column  {
+    Column {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f)
         ) { page ->
-            DetailScreen(city.get(page).fileName.dropLast(4))
+            DetailScreen(viewModel.getWeatherData(city[page].fileName.dropLast(4)))
         }
         Row(
-            modifier = Modifier.height(50.dp).background(Color.White).fillMaxWidth().padding(12.dp),
+            modifier = Modifier
+                .height(50.dp)
+                .background(Color.White)
+                .fillMaxWidth()
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row (
+            Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                city.forEach {
+                city.forEachIndexed { index, it ->
                     if (it.fileName == "current.xml") {
                         Icon(
                             painter = painterResource(R.drawable.baseline_my_location_24),
                             "",
-                            tint = if (city.get(pagerState.currentPage).fileName == it.fileName) Color.Black else Color.LightGray,
-                            modifier = Modifier.padding(3.dp).size(15.dp)
+                            tint = if (index == pagerState.currentPage) Color.Black else Color.LightGray,
+                            modifier = Modifier
+                                .padding(3.dp)
+                                .size(15.dp)
                         )
                     } else {
                         Box(
                             modifier = Modifier
                                 .padding(3.dp)
                                 .clip(CircleShape)
-                                .background(if (city.get(pagerState.currentPage).fileName == it.fileName) Color.Black else Color.LightGray,)
+                                .background(if (index == pagerState.currentPage) Color.Black else Color.LightGray)
                                 .size(10.dp)
                         )
                     }
                 }
             }
-            Icon (
+            Icon(
                 painter = painterResource(R.drawable.baseline_list_24),
                 "",
                 modifier = Modifier.clickable {
@@ -81,5 +87,5 @@ fun DetailPager(viewModel: MainViewModel,city: List<City>,initPage: Int) {
 fun DetailPagerPreview() {
     val context = LocalContext.current
     val city = parseCityXml(context.resources.getXml(R.xml.city_list))
-    DetailPager(MainViewModel(),city,0)
+    DetailPager(MainViewModel(), city, 0)
 }

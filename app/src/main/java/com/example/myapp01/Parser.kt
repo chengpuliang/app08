@@ -4,37 +4,38 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.Color
 import org.xmlpull.v1.XmlPullParser
 
-data class WeatherData (
+data class WeatherData(
     val currentWeather: CurrentWeather,
     val hourlyForecast: List<HourlyForecast>,
     val tenDayForecast: List<TenDayForecast>,
-    val airQualityIndex: AirQualityIndex
+    val airQualityIndex: AirQualityIndex,
+    val isCurrent: Boolean
 )
 
-data class CurrentWeather (
+data class CurrentWeather(
     val city: String,
     val latitude: String,
     val longitude: String
 )
 
-data class HourlyForecast (
+data class HourlyForecast(
     val time: String,
     val weatherCondition: String,
     val temperature: String
 )
 
-data class TenDayForecast (
+data class TenDayForecast(
     val date: String,
     val weatherCondition: String,
     val highTemperature: String,
     val lowTemperature: String
 )
 
-data class AirQualityIndex (
+data class AirQualityIndex(
     val currentAqi: String
 )
 
-data class City (
+data class City(
     val name: String,
     val nameEn: String,
     val fileName: String
@@ -52,12 +53,18 @@ fun parseWeatherData(parser: XmlPullParser): WeatherData {
     var dayDate = ""
     var dayHigh = ""
     var dayLow = ""
-    var hourlyForecast = mutableListOf<HourlyForecast>()
-    var tenDayForecast = mutableListOf<TenDayForecast>()
+    var isCurrent = false
+    val hourlyForecast = mutableListOf<HourlyForecast>()
+    val tenDayForecast = mutableListOf<TenDayForecast>()
     while (eventType != XmlPullParser.END_DOCUMENT) {
         when (eventType) {
             XmlPullParser.START_TAG -> {
                 when (parser.name) {
+                    "current_weather" -> {
+                        val typeAttribute = parser.getAttributeValue(null, "type")
+                        if (typeAttribute == "current") isCurrent = true
+                    }
+
                     "city" -> cityName = parser.nextText()
                     "current_aqi" -> aqi = parser.nextText()
                     "latitude" -> latitude = parser.nextText()
@@ -70,16 +77,18 @@ fun parseWeatherData(parser: XmlPullParser): WeatherData {
                     "low_temperature" -> dayLow = parser.nextText()
                 }
             }
+
             XmlPullParser.END_TAG -> {
                 when (parser.name) {
                     "hour" -> {
                         hourlyForecast.add(
-                            HourlyForecast(hourTime,weatherCondition, temperature)
+                            HourlyForecast(hourTime, weatherCondition, temperature)
                         )
                     }
+
                     "day" -> {
                         tenDayForecast.add(
-                            TenDayForecast(dayDate,weatherCondition,dayHigh,dayLow)
+                            TenDayForecast(dayDate, weatherCondition, dayHigh, dayLow)
                         )
                     }
                 }
@@ -89,10 +98,11 @@ fun parseWeatherData(parser: XmlPullParser): WeatherData {
         eventType = parser.next()
     }
     return WeatherData(
-        currentWeather = CurrentWeather(cityName,latitude,longitude),
+        currentWeather = CurrentWeather(cityName, latitude, longitude),
         hourlyForecast = hourlyForecast,
         tenDayForecast = tenDayForecast,
-        airQualityIndex = AirQualityIndex(aqi)
+        airQualityIndex = AirQualityIndex(aqi),
+        isCurrent
     )
 }
 
@@ -111,10 +121,11 @@ fun parseCityXml(parser: XmlPullParser): List<City> {
                     "file_name" -> fileName = parser.nextText()
                 }
             }
+
             XmlPullParser.END_TAG -> {
                 if (parser.name == "city") {
                     cityList.add(
-                        City(name,nameEn,fileName)
+                        City(name, nameEn, fileName)
                     )
                 }
             }
@@ -124,16 +135,16 @@ fun parseCityXml(parser: XmlPullParser): List<City> {
     return cityList
 }
 
-enum class WeatherRes (
+enum class WeatherRes(
     val icon: Int,
     val background: Int,
     val chName: Int
 ) {
-    cloudy(R.drawable.ic_cloudy,R.drawable.cloudy,R.string.cloudy),
-    overcast(R.drawable.ic_overcast,R.drawable.overcast, R.string.overcast),
-    rain(R.drawable.ic_rain,R.drawable.rain, R.string.rain),
-    sunny(R.drawable.ic_sunny,R.drawable.sunny, R.string.sunny),
-    thunder(R.drawable.ic_thunder,R.drawable.thunder, R.string.thunder)
+    cloudy(R.drawable.ic_cloudy, R.drawable.cloudy, R.string.cloudy),
+    overcast(R.drawable.ic_overcast, R.drawable.overcast, R.string.overcast),
+    rain(R.drawable.ic_rain, R.drawable.rain, R.string.rain),
+    sunny(R.drawable.ic_sunny, R.drawable.sunny, R.string.sunny),
+    thunder(R.drawable.ic_thunder, R.drawable.thunder, R.string.thunder)
 }
 
 fun getColorOnBg(weatherCondition: String): Color {

@@ -47,19 +47,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun DetailScreen(cityName: String) {
-    val context = LocalContext.current
-    val weatherData = remember {
-        parseWeatherData(
-            context.resources.getXml(
-                context.resources.getIdentifier(
-                    cityName,
-                    "xml",
-                    context.packageName
-                )
-            )
-        )
-    }
+fun DetailScreen(weatherData: WeatherData) {
     val nowHour = remember { SimpleDateFormat("HH:00", Locale.getDefault()).format(Date()) }
     val nowHourlyForecast =
         remember {
@@ -86,7 +74,7 @@ fun DetailScreen(cityName: String) {
                 .verticalScroll(rememberScrollState())
         ) {
             VSpacer(32.dp)
-            if (cityName == "current") {
+            if (weatherData.isCurrent) {
                 Text(
                     text = "當前位置",
                     color = getColorOnBg(nowHourlyForecast.weatherCondition),
@@ -96,7 +84,7 @@ fun DetailScreen(cityName: String) {
             Text(
                 text = weatherData.currentWeather.city,
                 color = getColorOnBg(nowHourlyForecast.weatherCondition),
-                fontSize = if (cityName == "current") 16.sp else 28.sp
+                fontSize = if (weatherData.isCurrent) 16.sp else 28.sp
             )
             VSpacer(16.dp)
             Row {
@@ -398,7 +386,7 @@ fun DetailScreen(cityName: String) {
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            VSpacer(12.dp)
         }
     }
 }
@@ -407,6 +395,6 @@ fun DetailScreen(cityName: String) {
 @Composable
 fun DetailScreenPreview() {
     MyApp01Theme {
-        DetailScreen("taichung")
+        DetailScreen(MainViewModel().apply { initialize(LocalContext.current) }.getWeatherData("taipei"))
     }
 }
