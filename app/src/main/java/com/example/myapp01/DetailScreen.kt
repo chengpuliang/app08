@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -48,128 +49,123 @@ import java.util.Locale
 @Composable
 fun DetailScreen(cityName: String) {
     val context = LocalContext.current
-    val weatherData = parseWeatherData(context.resources.getXml(
-        context.resources.getIdentifier(
-            cityName,
-            "xml",
-            context.packageName
-        )
-    ))
-    val currentDate = Date()
-    val nowHour = SimpleDateFormat("HH:00", Locale.getDefault()).format(currentDate)
-    val nowHourlyForecast =
-        weatherData.hourlyForecast.find{it.time == nowHour} ?: HourlyForecast("NA","NA","NA")
-    Box {
-        Image (
-            painter = painterResource(
+    val weatherData = remember {
+        parseWeatherData(
+            context.resources.getXml(
                 context.resources.getIdentifier(
-                    nowHourlyForecast.weatherCondition,
-                    "drawable",
+                    cityName,
+                    "xml",
                     context.packageName
                 )
+            )
+        )
+    }
+    val nowHour = remember { SimpleDateFormat("HH:00", Locale.getDefault()).format(Date()) }
+    val nowHourlyForecast =
+        remember {
+            weatherData.hourlyForecast.find { it.time == nowHour } ?: HourlyForecast(
+                "NA",
+                "NA",
+                "NA"
+            )
+        }
+    val todayForecast = remember { weatherData.tenDayForecast.first() }
+    Box {
+        Image(
+            painter = painterResource(
+                WeatherRes.valueOf(nowHourlyForecast.weatherCondition).background
             ),
-            "", contentScale = ContentScale.Crop,
+            nowHourlyForecast.weatherCondition, contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        Column (
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize().padding(16.dp,16.dp,16.dp,0.dp).verticalScroll(rememberScrollState())
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp, 0.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            VSpacer(32.dp)
             if (cityName == "current") {
                 Text(
                     text = "當前位置",
-                    color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                    color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 24.sp
                 )
             }
             Text(
                 text = weatherData.currentWeather.city,
-                color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                color = getColorOnBg(nowHourlyForecast.weatherCondition),
                 fontSize = if (cityName == "current") 16.sp else 28.sp
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            VSpacer(16.dp)
             Row {
-                Spacer(modifier = Modifier.width(24.dp))
+                HSpacer(24.dp)
                 Text(
                     text = nowHourlyForecast.temperature,
-                    color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                    color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 72.sp
                 )
             }
             Text(
                 text = stringResource(
-                    id =
-                    context.resources.getIdentifier(
-                        nowHourlyForecast.weatherCondition,
-                        "string",
-                        context.packageName
-                    )
+                    id = WeatherRes.valueOf(nowHourlyForecast.weatherCondition).chName
                 ),
-                color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                color = getColorOnBg(nowHourlyForecast.weatherCondition),
                 fontSize = 20.sp
             )
             Spacer(modifier = Modifier.height(6.dp))
             Row {
                 Text(
-                    text = "H: ${weatherData.tenDayForecast.first().highTemperature}",
-                    color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                    text = "H: ${todayForecast.highTemperature}",
+                    color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 18.sp
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(
-                    text = "L: ${weatherData.tenDayForecast.first().lowTemperature}",
-                    color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                    text = "L: ${todayForecast.lowTemperature}",
+                    color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 18.sp
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            VSpacer(12.dp)
             Card(
                 modifier = Modifier.alpha(0.7f)
             ) {
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState(0))
                 ) {
-                    weatherData.hourlyForecast.forEach { hourlyForecast ->
-                        if (hourlyForecast.time.replace(":", "").toInt() >= nowHour.replace(":", "")
-                                .toInt()
+                    weatherData.hourlyForecast.filter {
+                        it.time.replace(":", "").toInt() >= nowHour.replace(":", "")
+                            .toInt()
+                    }.forEach { hourlyForecast ->
+                        Column(
+                            modifier = Modifier.padding(16.dp, 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp, 12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = if (hourlyForecast.time == nowHour) "現在" else hourlyForecast.time
-
-                                )
-                                Image(
-                                    painter = painterResource(
-                                        context.resources.getIdentifier(
-                                            "ic_${hourlyForecast.weatherCondition}",
-                                            "drawable",
-                                            context.packageName
-                                        )
-                                    ),
-                                    "",
-                                    modifier = Modifier.padding(8.dp)
-                                )
-                                Text(
-                                    text = hourlyForecast.temperature
-                                )
-                            }
+                            Text(if (hourlyForecast.time == nowHour) "現在" else hourlyForecast.time)
+                            Image(
+                                painter = painterResource(
+                                    WeatherRes.valueOf(hourlyForecast.weatherCondition).icon
+                                ),
+                                hourlyForecast.weatherCondition,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                            Text(hourlyForecast.temperature)
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            VSpacer(12.dp)
             Card(
                 modifier = Modifier.alpha(0.7f)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp)
-                )
-                {
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -183,32 +179,33 @@ fun DetailScreen(cityName: String) {
                             fontSize = 14.sp
                         )
                     }
-                    val startTemp =
+                    val startTemp = remember {
                         weatherData.tenDayForecast.minOf { it.lowTemperature.removeSuffix("°C") }
                             .toInt()
-                    val endTemp =
+                    }
+                    val endTemp = remember {
                         weatherData.tenDayForecast.maxOf { it.highTemperature.removeSuffix("°C") }
                             .toInt()
+                    }
+                    val todayDate = remember { weatherData.tenDayForecast.first().date }
                     weatherData.tenDayForecast.forEach { day ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (day.date == weatherData.tenDayForecast.first().date) "今天" else day.date.drop(
+                                text = if (day.date == todayDate) "今天" else day.date.drop(
                                     5
                                 ).replace("-", "/"),
                                 modifier = Modifier.weight(.2f)
                             )
                             Image(
                                 painter = painterResource(
-                                    context.resources.getIdentifier(
-                                        "ic_${day.weatherCondition}",
-                                        "drawable",
-                                        context.packageName
-                                    )
+                                    WeatherRes.valueOf(day.weatherCondition).icon
                                 ),
                                 "",
-                                modifier = Modifier.padding(8.dp).weight(.3f)
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .weight(.3f)
                             )
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -238,17 +235,13 @@ fun DetailScreen(cityName: String) {
                                         )
                                         .clipToBounds()
                                 ) {
-
-                                    // 漸層條（固定寬度，不會跟進度縮放）
-                                    val gradientWidth = 100.dp  // 可調整，來決定漸層覆蓋的範圍
-
+                                    val gradientWidth = 100.dp
                                     Box(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(
-                                                gradientWidth * ((day.lowTemperature.removeSuffix(
-                                                    "°C"
-                                                ).toInt() - startTemp)) / (endTemp - startTemp)
+                                                gradientWidth * ((day.lowTemperature.dropLast(2)
+                                                    .toInt() - startTemp)) / (endTemp - startTemp)
                                             )
                                             .background(
                                                 Color.Gray
@@ -258,14 +251,13 @@ fun DetailScreen(cityName: String) {
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(
-                                                gradientWidth - (gradientWidth * ((day.highTemperature.removeSuffix(
-                                                    "°C"
+                                                gradientWidth - (gradientWidth * ((day.highTemperature.dropLast(
+                                                    2
                                                 ).toInt() - startTemp)) / (endTemp - startTemp))
                                             )
                                             .offset(
-                                                gradientWidth * ((day.highTemperature.removeSuffix(
-                                                    "°C"
-                                                ).toInt() - startTemp)) / (endTemp - startTemp)
+                                                gradientWidth * ((day.highTemperature.dropLast(2)
+                                                    .toInt() - startTemp)) / (endTemp - startTemp)
                                             )
                                             .background(
                                                 Color.Gray
@@ -281,12 +273,14 @@ fun DetailScreen(cityName: String) {
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            VSpacer(12.dp)
             Card(
                 modifier = Modifier.alpha(0.7f)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
                 )
                 {
                     Row(
@@ -345,16 +339,21 @@ fun DetailScreen(cityName: String) {
                                 weatherData.airQualityIndex.currentAqi,
                                 textAlign = TextAlign.Center,
                                 fontSize = 48.sp,
-                                modifier = Modifier.width(250.dp).padding(0.dp, 90.dp, 0.dp, 0.dp)
+                                modifier = Modifier
+                                    .width(250.dp)
+                                    .padding(0.dp, 90.dp, 0.dp, 0.dp)
                             )
                             Text(
                                 "AQI",
                                 textAlign = TextAlign.Center,
                                 fontSize = 16.sp,
-                                modifier = Modifier.width(250.dp).padding(0.dp, 140.dp, 0.dp, 0.dp)
+                                modifier = Modifier
+                                    .width(250.dp)
+                                    .padding(0.dp, 140.dp, 0.dp, 0.dp)
                             )
                             Row(
-                                modifier = Modifier.width(250.dp)
+                                modifier = Modifier
+                                    .width(250.dp)
                                     .padding(25.dp, 190.dp, 20.dp, 0.dp)
                             ) {
                                 Text(
@@ -369,18 +368,22 @@ fun DetailScreen(cityName: String) {
                             }
                         }
                         Column(
-                            modifier = Modifier.offset(0.dp, -35.dp).background(
-                                when (weatherData.airQualityIndex.currentAqi.toInt()) {
-                                    in 0..24 -> (Color(0xff33767d))
-                                    in 25..49 -> (Color(0xff44996b))
-                                    in 50..74 -> (Color(0xff91bc5d))
-                                    in 75..99 -> (Color(0xfffadf5b))
-                                    in 100..124 -> (Color(0xfff4bcb2))
-                                    in 125..149 -> (Color(0xfff0994c))
-                                    in 150..175 -> (Color(0xffd4563f))
-                                    else -> Color.Gray
-                                }
-                            ).width(80.dp).height(35.dp),
+                            modifier = Modifier
+                                .offset(0.dp, (-35).dp)
+                                .background(
+                                    when (weatherData.airQualityIndex.currentAqi.toInt()) {
+                                        in 0..24 -> (Color(0xff33767d))
+                                        in 25..49 -> (Color(0xff44996b))
+                                        in 50..74 -> (Color(0xff91bc5d))
+                                        in 75..99 -> (Color(0xfffadf5b))
+                                        in 100..124 -> (Color(0xfff4bcb2))
+                                        in 125..149 -> (Color(0xfff0994c))
+                                        in 150..175 -> (Color(0xffd4563f))
+                                        else -> Color.Gray
+                                    }
+                                )
+                                .width(80.dp)
+                                .height(35.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -399,6 +402,7 @@ fun DetailScreen(cityName: String) {
         }
     }
 }
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DetailScreenPreview() {
@@ -406,4 +410,3 @@ fun DetailScreenPreview() {
         DetailScreen("taichung")
     }
 }
-

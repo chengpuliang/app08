@@ -30,7 +30,7 @@ fun DetailPager(viewModel: MainViewModel,city: List<City>,initPage: Int) {
     val pagerState = rememberPagerState(pageCount = {
         city.count()
     }, initialPage = initPage)
-    Column () {
+    Column  {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f)

@@ -1,6 +1,7 @@
 package com.example.myapp01
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.Color
 import org.xmlpull.v1.XmlPullParser
 
 data class WeatherData (
@@ -121,4 +122,23 @@ fun parseCityXml(parser: XmlPullParser): List<City> {
         eventType = parser.next()
     }
     return cityList
+}
+
+enum class WeatherRes (
+    val icon: Int,
+    val background: Int,
+    val chName: Int
+) {
+    cloudy(R.drawable.ic_cloudy,R.drawable.cloudy,R.string.cloudy),
+    overcast(R.drawable.ic_overcast,R.drawable.overcast, R.string.overcast),
+    rain(R.drawable.ic_rain,R.drawable.rain, R.string.rain),
+    sunny(R.drawable.ic_sunny,R.drawable.sunny, R.string.sunny),
+    thunder(R.drawable.ic_thunder,R.drawable.thunder, R.string.thunder)
+}
+
+fun getColorOnBg(weatherCondition: String): Color {
+    return if (weatherCondition == "sunny")
+        Color.Black
+    else
+        Color.White
 }
