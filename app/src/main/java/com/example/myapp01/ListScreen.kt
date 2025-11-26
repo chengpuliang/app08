@@ -17,8 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +37,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +64,7 @@ fun ListScreen(viewModel: MainViewModel) {
         parseCityXml(context.resources.getXml(R.xml.city_list))
     }
     val userCityList = remember { mutableStateListOf<City>() }
+    var changeOrderMode by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         val jsonArray = JSONArray(sharedPreferences.getString("userCityList", "[]"))
         for (i in 0 until jsonArray.length()) {
@@ -87,7 +97,34 @@ fun ListScreen(viewModel: MainViewModel) {
             .padding(18.dp, 0.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(60.dp))
+        var expanded by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .padding(0.dp,24.dp,0.dp,0.dp).align(AbsoluteAlignment.Right)
+        ) {
+            if (changeOrderMode) {
+                IconButton(onClick = { changeOrderMode = false }) {
+                    Icon(Icons.Default.Done, contentDescription = "Done")
+                }
+            } else {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                }
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("編輯列表") },
+                    onClick = { changeOrderMode = true;expanded = false}
+                )
+                DropdownMenuItem(
+                    text = { Text("Option 2") },
+                    onClick = { /* Do something... */ }
+                )
+            }
+        }
         Text(
             text = "天氣",
             fontWeight = FontWeight.Bold,
@@ -108,15 +145,113 @@ fun ListScreen(viewModel: MainViewModel) {
         Spacer(Modifier.height(8.dp))
         if (searchText.isBlank()) {
             userCityList.forEachIndexed { index, city ->
-                WeatherListItem(
-                    context = context,
-                    item = city,
-                    onSwitch = {
-                        viewModel.push {
-                            DetailPager(viewModel, userCityList, index)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (changeOrderMode && index != 0) {
+                        Button(
+                            onClick = {
+                                userCityList.removeAt(index)
+                                val jsonArray = JSONArray()
+                                userCityList.forEach { city ->
+                                    val jsonObject = JSONObject()
+                                    jsonObject.put("name", city.name)
+                                    jsonObject.put("nameEn", city.nameEn)
+                                    jsonObject.put("fileName", city.fileName)
+
+                                    jsonArray.put(jsonObject)
+                                }
+                                sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                            },
+                            modifier = Modifier
+                                .height(140.dp)
+                                .padding(6.dp)
+                                .width(40.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_remove_24),
+                                contentDescription = "",
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
                     }
-                )
+                    Column(modifier = Modifier.weight(1f)) {
+                        WeatherListItem(
+                            context = context,
+                            item = city,
+                            onSwitch = {
+                                viewModel.push {
+                                    DetailPager(viewModel, userCityList, index)
+                                }
+                            }
+                        )
+                    }
+                    if (changeOrderMode && index != 0) {
+                        Column {
+                            Button(
+                                onClick = {
+                                    val tmp = city
+                                    userCityList[index] = userCityList[index-1]
+                                    userCityList[index-1] = tmp
+                                    val jsonArray = JSONArray()
+                                    userCityList.forEach { city ->
+                                        val jsonObject = JSONObject()
+                                        jsonObject.put("name", city.name)
+                                        jsonObject.put("nameEn", city.nameEn)
+                                        jsonObject.put("fileName", city.fileName)
+
+                                        jsonArray.put(jsonObject)
+                                    }
+                                    sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                                },
+                                modifier = Modifier
+                                    .height(70.dp)
+                                    .padding(6.dp,6.dp,6.dp,2.dp)
+                                    .width(40.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                enabled = index > 1,
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.baseline_keyboard_arrow_up_24),
+                                    contentDescription = "",
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    val tmp = city
+                                    userCityList[index] = userCityList[index+1]
+                                    userCityList[index+1] = tmp
+                                    val jsonArray = JSONArray()
+                                    userCityList.forEach { city ->
+                                        val jsonObject = JSONObject()
+                                        jsonObject.put("name", city.name)
+                                        jsonObject.put("nameEn", city.nameEn)
+                                        jsonObject.put("fileName", city.fileName)
+
+                                        jsonArray.put(jsonObject)
+                                    }
+                                    sharedPreferences.edit().putString("userCityList", jsonArray.toString()).apply()
+                                },
+                                modifier = Modifier
+                                    .height(70.dp)
+                                    .padding(6.dp,2.dp,6.dp,6.dp)
+                                    .width(40.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(0.dp),
+                                enabled = index != userCityList.count()-1
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.baseline_keyboard_arrow_down_24),
+                                    contentDescription = "",
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         } else {
             filteredCityList.forEach { city ->
@@ -133,7 +268,6 @@ fun ListScreen(viewModel: MainViewModel) {
                             onClick = {
                                 userCityList.add(city)
                                 val jsonArray = JSONArray()
-
                                 userCityList.forEach { city ->
                                     val jsonObject = JSONObject()
                                     jsonObject.put("name", city.name)
@@ -221,9 +355,13 @@ fun WeatherListItem(context: Context,item: City,onSwitch: () -> Unit) {
                         text = item.name,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
-                        modifier = Modifier.weight(1f)
+                        color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White
                     )
+                    Text(
+                        text = nowHour,
+                        color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f))
                 }
                 Text(
                     text = stringResource(
