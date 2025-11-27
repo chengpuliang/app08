@@ -1,5 +1,6 @@
 package com.example.myapp01
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -14,15 +15,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import org.json.JSONArray
 import org.json.JSONObject
-import kotlin.collections.get
-import kotlin.collections.set
 
 
 class MainActivity : ComponentActivity() {
@@ -52,7 +51,7 @@ class MainViewModel : ViewModel() {
     fun initialize(context: Context) {
         if (appContext == null) {
             appContext = context.applicationContext
-            val cityListOriginal = parseCityXml(context.resources.getXml(R.xml.city_list))
+            cityListOriginal.addAll(parseCityXml(context.resources.getXml(R.xml.city_list)))
             sharedPreferences = context.getSharedPreferences("App08",Context.MODE_PRIVATE)
             val jsonArray = JSONArray(sharedPreferences!!.getString("userCityList", "[]"))
             for (i in 0 until jsonArray.length()) {
@@ -69,9 +68,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    @SuppressLint("DiscouragedApi")
     fun getWeatherData(cityName: String): WeatherData {
         if (_weatherDataCache.containsKey(cityName)) {
-            println("use cache for " + cityName)
+            println("use cache for $cityName")
             return _weatherDataCache[cityName]!!
         }
         val context = appContext!!
@@ -108,7 +108,7 @@ class MainViewModel : ViewModel() {
 
             jsonArray.put(jsonObject)
         }
-        sharedPreferences!!.edit().putString("userCityList", jsonArray.toString()).apply()
+        sharedPreferences!!.edit { putString("userCityList", jsonArray.toString()) }
     }
     fun push(targetScreen: @Composable () -> Unit) {
         screens += targetScreen

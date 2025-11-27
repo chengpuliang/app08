@@ -118,7 +118,7 @@ fun DetailScreen(weatherData: WeatherData) {
             }
             VSpacer(12.dp)
             Card(
-                modifier = Modifier.alpha(0.7f)
+                modifier = Modifier.alpha(0.7f).fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState(0))

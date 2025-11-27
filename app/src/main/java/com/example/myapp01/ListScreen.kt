@@ -1,5 +1,6 @@
 package com.example.myapp01
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -29,10 +30,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,8 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.json.JSONArray
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,7 +55,6 @@ import java.util.Locale
 @Composable
 fun ListScreen(viewModel: MainViewModel) {
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("App08",Context.MODE_PRIVATE)
     var changeOrderMode by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
     val filteredCityList by remember {
@@ -238,6 +234,7 @@ fun ListScreen(viewModel: MainViewModel) {
     }
 }
 
+@SuppressLint("DiscouragedApi")
 @Composable
 fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Unit) {
     val currentDate = Date()
@@ -250,13 +247,7 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
         }
     ){
         Image (
-            painter = painterResource(
-                context.resources.getIdentifier(
-                    nowHourlyForecast.weatherCondition,
-                    "drawable",
-                    context.packageName
-                )
-            ),"",
+            painter = painterResource(WeatherRes.valueOf(nowHourlyForecast.weatherCondition).background),"",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxWidth().clip(
                 RoundedCornerShape(10.dp)).border(1.dp, Color.Black,
