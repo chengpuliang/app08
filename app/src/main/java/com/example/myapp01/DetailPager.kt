@@ -15,6 +15,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,12 +31,17 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
     val pagerState = rememberPagerState(pageCount = {
         city.count()
     }, initialPage = initPage)
+    val weatherList = remember(city) {
+        city.map { c ->
+            viewModel.getWeatherData(c.fileName.dropLast(4))
+        }
+    }
     Column {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f)
         ) { page ->
-            DetailScreen(viewModel.getWeatherData(city[page].fileName.dropLast(4)))
+            DetailScreen(weatherList[page])
         }
         Row(
             modifier = Modifier
@@ -87,5 +93,5 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
 fun DetailPagerPreview() {
     val context = LocalContext.current
     val city = parseCityXml(context.resources.getXml(R.xml.city_list))
-    DetailPager(MainViewModel(), city, 0)
+    DetailPager(MainViewModel().apply { initialize(LocalContext.current) }, city, 0)
 }
