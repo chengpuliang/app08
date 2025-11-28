@@ -30,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,9 +49,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun ListScreen(viewModel: MainViewModel) {
@@ -69,6 +72,17 @@ fun ListScreen(viewModel: MainViewModel) {
             }
         }
     }
+    var nowTime by remember{ mutableStateOf("")}
+    LaunchedEffect(Unit) {
+        if (viewModel.firstStart) {
+            viewModel.firstStart = false
+            viewModel.push{ DetailPager(viewModel,viewModel.userCityList,0) }
+        }
+        while(true) {
+            nowTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+            delay(1.minutes)
+        }
+    }
     Column(
         modifier = Modifier
             .padding(18.dp, 0.dp)
@@ -78,7 +92,8 @@ fun ListScreen(viewModel: MainViewModel) {
         var expanded by remember { mutableStateOf(false) }
         Box(
             modifier = Modifier
-                .padding(0.dp,24.dp,0.dp,0.dp).align(AbsoluteAlignment.Right)
+                .padding(0.dp, 24.dp, 0.dp, 0.dp)
+                .align(AbsoluteAlignment.Right)
         ) {
             if (changeOrderMode) {
                 IconButton(onClick = { changeOrderMode = false }) {
@@ -152,7 +167,7 @@ fun ListScreen(viewModel: MainViewModel) {
                                 viewModel.push {
                                     DetailPager(viewModel, viewModel.userCityList, index)
                                 }
-                            }
+                            },nowTime = nowTime
                         )
                     }
                     if (changeOrderMode && index != 0) {
@@ -163,7 +178,7 @@ fun ListScreen(viewModel: MainViewModel) {
                                 },
                                 modifier = Modifier
                                     .height(70.dp)
-                                    .padding(6.dp,6.dp,6.dp,2.dp)
+                                    .padding(6.dp, 6.dp, 6.dp, 2.dp)
                                     .width(40.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 enabled = index > 1,
@@ -181,7 +196,7 @@ fun ListScreen(viewModel: MainViewModel) {
                                 },
                                 modifier = Modifier
                                     .height(70.dp)
-                                    .padding(6.dp,2.dp,6.dp,6.dp)
+                                    .padding(6.dp, 2.dp, 6.dp, 6.dp)
                                     .width(40.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 contentPadding = PaddingValues(0.dp),
@@ -204,7 +219,8 @@ fun ListScreen(viewModel: MainViewModel) {
                         WeatherListItem(
                             context = context,
                             weatherData = viewModel.getWeatherData(city.fileName.dropLast(4)),
-                            onSwitch = {}
+                            onSwitch = {},
+                            nowTime = nowTime
                         )
                     }
                     if (!viewModel.userCityList.contains(city)) {
@@ -236,27 +252,38 @@ fun ListScreen(viewModel: MainViewModel) {
 
 @SuppressLint("DiscouragedApi")
 @Composable
-fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Unit) {
+fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Unit,nowTime: String) {
     val currentDate = Date()
     val nowHour = SimpleDateFormat("HH:00", Locale.getDefault()).format(currentDate)
     val nowHourlyForecast =
         weatherData.hourlyForecast.find{it.time == nowHour} ?: HourlyForecast("NA","NA","NA")
     Box (
-        modifier = Modifier.height(140.dp).fillMaxWidth().padding(0.dp,8.dp).clickable {
-            onSwitch()
-        }
+        modifier = Modifier
+            .height(140.dp)
+            .fillMaxWidth()
+            .padding(0.dp, 8.dp)
+            .clickable {
+                onSwitch()
+            }
     ){
         Image (
             painter = painterResource(WeatherRes.valueOf(nowHourlyForecast.weatherCondition).background),"",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().clip(
-                RoundedCornerShape(10.dp)).border(1.dp, Color.Black,
-                RoundedCornerShape(10.dp)
-            )
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(
+                    RoundedCornerShape(10.dp)
+                )
+                .border(
+                    1.dp, Color.Black,
+                    RoundedCornerShape(10.dp)
+                )
         )
         Row {
             Column (
-                modifier = Modifier.weight(.5f).padding(12.dp),
+                modifier = Modifier
+                    .weight(.5f)
+                    .padding(12.dp),
             ){
                 if (weatherData.isCurrent) {
                     Text(
@@ -280,7 +307,7 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White
                     )
                     Text(
-                        text = nowHour,
+                        text = nowTime,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
                         fontSize = 14.sp,
                         modifier = Modifier.weight(1f))
@@ -299,7 +326,9 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
                 )
             }
             Column (
-                modifier = Modifier.weight(.5f).padding(12.dp),
+                modifier = Modifier
+                    .weight(.5f)
+                    .padding(12.dp),
                 horizontalAlignment = Alignment.End
             ){
                 Text (
@@ -329,5 +358,5 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ListPreview() {
-    ListScreen(MainViewModel().apply{initialize(LocalContext.current)})
+    ListScreen(MainViewModel().apply{initialize(LocalContext.current);userCityList.add(this.cityListOriginal.last())})
 }

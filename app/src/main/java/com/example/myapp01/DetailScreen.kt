@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -118,7 +119,8 @@ fun DetailScreen(weatherData: WeatherData) {
             }
             VSpacer(12.dp)
             Card(
-                modifier = Modifier.alpha(0.7f).fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xB3FFFFFF))
             ) {
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState(0))
@@ -147,7 +149,7 @@ fun DetailScreen(weatherData: WeatherData) {
             }
             VSpacer(12.dp)
             Card(
-                modifier = Modifier.alpha(0.7f)
+                colors = CardDefaults.cardColors(containerColor = Color(0xB3FFFFFF))
             ) {
                 Column(
                     modifier = Modifier
@@ -263,7 +265,7 @@ fun DetailScreen(weatherData: WeatherData) {
             }
             VSpacer(12.dp)
             Card(
-                modifier = Modifier.alpha(0.7f)
+                colors = CardDefaults.cardColors(containerColor = Color(0xB3FFFFFF))
             ) {
                 Column(
                     modifier = Modifier

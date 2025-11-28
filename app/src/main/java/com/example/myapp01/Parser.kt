@@ -21,15 +21,23 @@ data class CurrentWeather(
 data class HourlyForecast(
     val time: String,
     val weatherCondition: String,
+    val orgTemp: String
+) {
     val temperature: String
-)
+        get() {
+               
+        }
+}
 
 data class TenDayForecast(
     val date: String,
     val weatherCondition: String,
     val highTemperature: String,
     val lowTemperature: String
-)
+) {
+    val orgLowTemp: String
+    val orgGetTemp: String
+}
 
 data class AirQualityIndex(
     val currentAqi: String
@@ -82,13 +90,13 @@ fun parseWeatherData(parser: XmlPullParser): WeatherData {
                 when (parser.name) {
                     "hour" -> {
                         hourlyForecast.add(
-                            HourlyForecast(hourTime, weatherCondition, temperature)
+                            HourlyForecast(hourTime, weatherCondition, orgTemp = temperature)
                         )
                     }
 
                     "day" -> {
                         tenDayForecast.add(
-                            TenDayForecast(dayDate, weatherCondition, dayHigh, dayLow)
+                            TenDayForecast(dayDate, weatherCondition, orgHighTemp = dayHigh, orgLowTemp = dayLow)
                         )
                     }
                 }

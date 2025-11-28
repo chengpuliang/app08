@@ -47,6 +47,7 @@ class MainViewModel : ViewModel() {
     private val screens = mutableStateListOf<@Composable () -> Unit>({ ListScreen(this) })
     private var appContext: Context? = null
     private var sharedPreferences: SharedPreferences? = null
+    var firstStart = true
     val screen get() = screens.lastOrNull()
     fun initialize(context: Context) {
         if (appContext == null) {
