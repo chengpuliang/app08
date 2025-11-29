@@ -2,7 +2,7 @@ package com.example.myapp01
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +14,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -51,9 +52,16 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            IconButton(
+                onClick = {viewModel.push { MapScreen(viewModel) }}
+            ) {
+                Icon(painter = painterResource(R.drawable.outline_map_24),
+                    "",)
+            }
             Row(
                 modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 city.forEachIndexed { index, it ->
                     if (it.fileName == "current.xml") {
@@ -76,13 +84,12 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
                     }
                 }
             }
-            Icon(
-                painter = painterResource(R.drawable.baseline_list_24),
-                "",
-                modifier = Modifier.clickable {
-                    viewModel.pop()
-                }
-            )
+            IconButton(
+                onClick = {viewModel.pop()}
+            ) {
+                Icon(painter = painterResource(R.drawable.baseline_list_24),
+                    "",)
+            }
 
         }
     }

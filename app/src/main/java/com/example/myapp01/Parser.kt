@@ -2,6 +2,7 @@ package com.example.myapp01
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.Color
+import org.osmdroid.util.GeoPoint
 import org.xmlpull.v1.XmlPullParser
 
 data class WeatherData(
@@ -23,20 +24,35 @@ data class HourlyForecast(
     val weatherCondition: String,
     val orgTemp: String
 ) {
-    val temperature: String
+    val temperature: Int = orgTemp.takeWhile { it.isDigit() }.toInt()
         get() {
-               
+            if (GlobalSettings.getTempMode() == TempMode.F) {
+                return (field*1.8+32).toInt()
+            }
+            return field
         }
 }
 
 data class TenDayForecast(
     val date: String,
     val weatherCondition: String,
-    val highTemperature: String,
-    val lowTemperature: String
-) {
+    val orgHighTemp: String,
     val orgLowTemp: String
-    val orgGetTemp: String
+) {
+    val lowTemperature: Int = orgLowTemp.takeWhile { it.isDigit() }.toInt()
+        get() {
+            if (GlobalSettings.getTempMode() == TempMode.F) {
+                return (field*1.8+32).toInt()
+            }
+            return field
+        }
+    val highTemperature: Int = orgHighTemp.takeWhile { it.isDigit() }.toInt()
+        get() {
+            if (GlobalSettings.getTempMode() == TempMode.F) {
+                return (field*1.8+32).toInt()
+            }
+            return field
+        }
 }
 
 data class AirQualityIndex(
@@ -125,7 +141,7 @@ fun parseCityXml(parser: XmlPullParser): List<City> {
             XmlPullParser.START_TAG -> {
                 when (parser.name) {
                     "name" -> name = parser.nextText()
-                    "nane_en" -> nameEn = parser.nextText()
+                    "name_en" -> nameEn = parser.nextText()
                     "file_name" -> fileName = parser.nextText()
                 }
             }
@@ -160,4 +176,13 @@ fun getColorOnBg(weatherCondition: String): Color {
         Color.Black
     else
         Color.White
+}
+
+fun getLangText(ch: String,en: String): String {
+    if (GlobalSettings.getLang() == Lang.CH) return ch
+    else return en
+}
+
+fun getGeoPoint(city: String): GeoPoint {
+    when (city)
 }

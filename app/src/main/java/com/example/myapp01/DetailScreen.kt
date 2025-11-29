@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
@@ -89,9 +88,9 @@ fun DetailScreen(weatherData: WeatherData) {
             )
             VSpacer(16.dp)
             Row {
-                HSpacer(24.dp)
+                HSpacer(18.dp)
                 Text(
-                    text = nowHourlyForecast.temperature,
+                    text = "${nowHourlyForecast.temperature}°",
                     color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 72.sp
                 )
@@ -106,13 +105,13 @@ fun DetailScreen(weatherData: WeatherData) {
             Spacer(modifier = Modifier.height(6.dp))
             Row {
                 Text(
-                    text = "H: ${todayForecast.highTemperature}",
+                    text = "H: ${todayForecast.highTemperature}°",
                     color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 18.sp
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(
-                    text = "L: ${todayForecast.lowTemperature}",
+                    text = "L: ${todayForecast.lowTemperature}°",
                     color = getColorOnBg(nowHourlyForecast.weatherCondition),
                     fontSize = 18.sp
                 )
@@ -142,7 +141,7 @@ fun DetailScreen(weatherData: WeatherData) {
                                 hourlyForecast.weatherCondition,
                                 modifier = Modifier.padding(8.dp)
                             )
-                            Text(hourlyForecast.temperature)
+                            Text("${hourlyForecast.temperature}°")
                         }
                     }
                 }
@@ -170,12 +169,10 @@ fun DetailScreen(weatherData: WeatherData) {
                         )
                     }
                     val startTemp = remember {
-                        weatherData.tenDayForecast.minOf { it.lowTemperature.removeSuffix("°C") }
-                            .toInt()
+                        weatherData.tenDayForecast.minOf { it.lowTemperature }
                     }
                     val endTemp = remember {
-                        weatherData.tenDayForecast.maxOf { it.highTemperature.removeSuffix("°C") }
-                            .toInt()
+                        weatherData.tenDayForecast.maxOf { it.highTemperature }
                     }
                     val todayDate = remember { weatherData.tenDayForecast.first().date }
                     weatherData.tenDayForecast.forEach { day ->
@@ -203,7 +200,7 @@ fun DetailScreen(weatherData: WeatherData) {
                                 modifier = Modifier.weight(.5f)
                             ) {
                                 Text(
-                                    day.lowTemperature,
+                                    "${day.lowTemperature}°",
                                     fontSize = 12.sp
                                 )
                                 Box(
@@ -230,8 +227,7 @@ fun DetailScreen(weatherData: WeatherData) {
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(
-                                                gradientWidth * ((day.lowTemperature.dropLast(2)
-                                                    .toInt() - startTemp)) / (endTemp - startTemp)
+                                                gradientWidth * ((day.lowTemperature - startTemp)) / (endTemp - startTemp)
                                             )
                                             .background(
                                                 Color.Gray
@@ -241,13 +237,10 @@ fun DetailScreen(weatherData: WeatherData) {
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(
-                                                gradientWidth - (gradientWidth * ((day.highTemperature.dropLast(
-                                                    2
-                                                ).toInt() - startTemp)) / (endTemp - startTemp))
+                                                gradientWidth - (gradientWidth * ((day.highTemperature - startTemp)) / (endTemp - startTemp))
                                             )
                                             .offset(
-                                                gradientWidth * ((day.highTemperature.dropLast(2)
-                                                    .toInt() - startTemp)) / (endTemp - startTemp)
+                                                gradientWidth * ((day.highTemperature - startTemp)) / (endTemp - startTemp)
                                             )
                                             .background(
                                                 Color.Gray
@@ -255,7 +248,7 @@ fun DetailScreen(weatherData: WeatherData) {
                                     )
                                 }
                                 Text(
-                                    day.highTemperature,
+                                    "${day.highTemperature}°",
                                     fontSize = 12.sp
                                 )
                             }
@@ -269,7 +262,7 @@ fun DetailScreen(weatherData: WeatherData) {
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                            .fillMaxWidth()
                         .padding(12.dp)
                 )
                 {

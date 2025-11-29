@@ -20,14 +20,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
 
+enum class TempMode {C,F}
+enum class Lang {CH,EN}
+object GlobalSettings {
+    private val _tempMode = MutableStateFlow(TempMode.C)
+    fun setTempMode(mode: TempMode) {
+        _tempMode.value = mode
+    }
+    fun getTempMode(): TempMode {
+        return _tempMode.value
+    }
+    private val _lang = MutableStateFlow(Lang.EN)
+    fun setLang(lang: Lang) {
+        _lang.value = lang
+    }
+    fun getLang(): Lang {
+        return _lang.value
+    }
+}
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        org.osmdroid.config.Configuration.getInstance().userAgentValue = packageName
         val viewModel by viewModels<MainViewModel>()
         setContent {
             viewModel.initialize(LocalContext.current)
@@ -54,6 +76,8 @@ class MainViewModel : ViewModel() {
             appContext = context.applicationContext
             cityListOriginal.addAll(parseCityXml(context.resources.getXml(R.xml.city_list)))
             sharedPreferences = context.getSharedPreferences("App08",Context.MODE_PRIVATE)
+            GlobalSettings.setTempMode(if (sharedPreferences!!.getString("TempMode","C") == "C") TempMode.C else TempMode.F)
+            GlobalSettings.setLang(if (sharedPreferences!!.getString("Lang","CH") == "CH") Lang.CH else Lang.EN)
             val jsonArray = JSONArray(sharedPreferences!!.getString("userCityList", "[]"))
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
@@ -117,6 +141,13 @@ class MainViewModel : ViewModel() {
 
     fun pop() {
         screens.removeLastOrNull()
+    }
+
+    fun saveGlobalSettings() {
+        sharedPreferences!!.edit {
+            putString("TempMode",if (GlobalSettings.getTempMode() == TempMode.C) "C" else "F")
+            putString("Lang",if (GlobalSettings.getLang() == Lang.CH) "CH" else "EN")
+        }
     }
 }
 

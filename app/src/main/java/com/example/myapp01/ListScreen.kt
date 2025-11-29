@@ -1,7 +1,6 @@
 package com.example.myapp01
 
 import android.annotation.SuppressLint
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -72,13 +72,13 @@ fun ListScreen(viewModel: MainViewModel) {
             }
         }
     }
-    var nowTime by remember{ mutableStateOf("")}
+    var nowTime by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         if (viewModel.firstStart) {
             viewModel.firstStart = false
-            viewModel.push{ DetailPager(viewModel,viewModel.userCityList,0) }
+            viewModel.push { DetailPager(viewModel, viewModel.userCityList, 0) }
         }
-        while(true) {
+        while (true) {
             nowTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
             delay(1.minutes)
         }
@@ -109,24 +109,41 @@ fun ListScreen(viewModel: MainViewModel) {
                 onDismissRequest = { expanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("編輯列表") },
-                    onClick = { changeOrderMode = true;expanded = false}
+                    text = { Text(getLangText("編輯列表", "Edit List")) },
+                    onClick = { changeOrderMode = true; expanded = false }
                 )
                 DropdownMenuItem(
-                    text = { Text("Option 2") },
-                    onClick = { /* Do something... */ }
+                    text = { Text(getLangText("設定", "Settings")) },
+                    onClick = { viewModel.push { SettingsScreen(viewModel) }; expanded = false }
+                )
+                HorizontalDivider()
+                DropdownMenuItem(
+                    text = { Text(getLangText("攝氏 °C", "Celsius °C")) },
+                    onClick = {
+                        GlobalSettings.setTempMode(TempMode.C)
+                        viewModel.saveGlobalSettings()
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(getLangText("華氏 °F", "Fahrenheit °F")) },
+                    onClick = {
+                        GlobalSettings.setTempMode(TempMode.F)
+                        viewModel.saveGlobalSettings()
+                        expanded = false
+                    }
                 )
             }
         }
         Text(
-            text = "天氣",
+            text = getLangText("天氣", "Weather"),
             fontWeight = FontWeight.Bold,
             fontSize = 32.sp
         )
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
-            label = { Text("輸入城市地點來搜尋") },
+            label = { Text(getLangText("輸入城市地點來搜尋", "Search for a city")) },
             trailingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.baseline_search_24),
@@ -161,20 +178,20 @@ fun ListScreen(viewModel: MainViewModel) {
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         WeatherListItem(
-                            context = context,
+                            city = city,
                             weatherData = viewModel.getWeatherData(city.fileName.dropLast(4)),
                             onSwitch = {
                                 viewModel.push {
                                     DetailPager(viewModel, viewModel.userCityList, index)
                                 }
-                            },nowTime = nowTime
+                            }, nowTime = nowTime
                         )
                     }
                     if (changeOrderMode && index != 0) {
                         Column {
                             Button(
                                 onClick = {
-                                    viewModel.moveCity(index,index-1)
+                                    viewModel.moveCity(index, index - 1)
                                 },
                                 modifier = Modifier
                                     .height(70.dp)
@@ -192,7 +209,7 @@ fun ListScreen(viewModel: MainViewModel) {
                             }
                             Button(
                                 onClick = {
-                                    viewModel.moveCity(index,index+1)
+                                    viewModel.moveCity(index, index + 1)
                                 },
                                 modifier = Modifier
                                     .height(70.dp)
@@ -200,7 +217,7 @@ fun ListScreen(viewModel: MainViewModel) {
                                     .width(40.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 contentPadding = PaddingValues(0.dp),
-                                enabled = index != viewModel.userCityList.count()-1
+                                enabled = index != viewModel.userCityList.count() - 1
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.baseline_keyboard_arrow_down_24),
@@ -217,7 +234,7 @@ fun ListScreen(viewModel: MainViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         WeatherListItem(
-                            context = context,
+                            city = city,
                             weatherData = viewModel.getWeatherData(city.fileName.dropLast(4)),
                             onSwitch = {},
                             nowTime = nowTime
@@ -252,12 +269,12 @@ fun ListScreen(viewModel: MainViewModel) {
 
 @SuppressLint("DiscouragedApi")
 @Composable
-fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Unit,nowTime: String) {
+fun WeatherListItem(city: City, weatherData: WeatherData, onSwitch: () -> Unit, nowTime: String) {
     val currentDate = Date()
     val nowHour = SimpleDateFormat("HH:00", Locale.getDefault()).format(currentDate)
     val nowHourlyForecast =
-        weatherData.hourlyForecast.find{it.time == nowHour} ?: HourlyForecast("NA","NA","NA")
-    Box (
+        weatherData.hourlyForecast.find { it.time == nowHour } ?: HourlyForecast("NA", "NA", "NA")
+    Box(
         modifier = Modifier
             .height(140.dp)
             .fillMaxWidth()
@@ -265,9 +282,10 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
             .clickable {
                 onSwitch()
             }
-    ){
-        Image (
-            painter = painterResource(WeatherRes.valueOf(nowHourlyForecast.weatherCondition).background),"",
+    ) {
+        Image(
+            painter = painterResource(WeatherRes.valueOf(nowHourlyForecast.weatherCondition).background),
+            "",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
@@ -280,20 +298,20 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
                 )
         )
         Row {
-            Column (
+            Column(
                 modifier = Modifier
                     .weight(.5f)
                     .padding(12.dp),
-            ){
+            ) {
                 if (weatherData.isCurrent) {
                     Text(
-                        text = "當前位置",
+                        text = getLangText("當前位置", "My location"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
                     )
                     Text(
-                        text = weatherData.currentWeather.city,
+                        text = getLangText(city.name, city.nameEn),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
@@ -301,7 +319,7 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
                     )
                 } else {
                     Text(
-                        text = weatherData.currentWeather.city,
+                        text = getLangText(city.name, city.nameEn),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White
@@ -310,42 +328,40 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
                         text = nowTime,
                         color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
                         fontSize = 14.sp,
-                        modifier = Modifier.weight(1f))
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 Text(
-                    text = stringResource(
-                        id =
-                        context.resources.getIdentifier(
-                            nowHourlyForecast.weatherCondition,
-                            "string",
-                            context.packageName
-                        )
+                    text = getLangText(
+                        stringResource(
+                            id = WeatherRes.valueOf(nowHourlyForecast.weatherCondition).chName
+                        ), nowHourlyForecast.weatherCondition.uppercase()
                     ),
                     color = if (nowHourlyForecast.weatherCondition == "sunny") Color.Black else Color.White,
                     fontSize = 14.sp
                 )
             }
-            Column (
+            Column(
                 modifier = Modifier
                     .weight(.5f)
                     .padding(12.dp),
                 horizontalAlignment = Alignment.End
-            ){
-                Text (
-                    text = nowHourlyForecast.temperature,
+            ) {
+                Text(
+                    text = "${nowHourlyForecast.temperature}°",
                     color = Color.White,
                     fontSize = 54.sp,
                     modifier = Modifier.weight(1f)
                 )
                 Row {
                     Text(
-                        text = "H: ${weatherData.tenDayForecast.first().highTemperature}",
+                        text = "H: ${weatherData.tenDayForecast.first().highTemperature}°",
                         color = Color.White,
                         fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
-                        text = "L: ${weatherData.tenDayForecast.first().lowTemperature}",
+                        text = "L: ${weatherData.tenDayForecast.first().lowTemperature}°",
                         color = Color.White,
                         fontSize = 14.sp
                     )
@@ -358,5 +374,5 @@ fun WeatherListItem(context: Context,weatherData: WeatherData,onSwitch: () -> Un
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ListPreview() {
-    ListScreen(MainViewModel().apply{initialize(LocalContext.current);userCityList.add(this.cityListOriginal.last())})
+    ListScreen(MainViewModel().apply { initialize(LocalContext.current); userCityList.add(this.cityListOriginal.last()) })
 }
