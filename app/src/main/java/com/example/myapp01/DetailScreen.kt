@@ -266,7 +266,7 @@ fun DetailScreen(weatherData: WeatherData) {
             ) {
                 Column(
                     modifier = Modifier
-                            .fillMaxWidth()
+                        .fillMaxWidth()
                         .padding(12.dp)
                 )
                 {
@@ -346,18 +346,7 @@ fun DetailScreen(weatherData: WeatherData) {
                         Column(
                             modifier = Modifier
                                 .offset(0.dp, (-35).dp)
-                                .background(
-                                    when (weatherData.airQualityIndex.currentAqi.toInt()) {
-                                        in 0..24 -> (Color(0xff33767d))
-                                        in 25..49 -> (Color(0xff44996b))
-                                        in 50..74 -> (Color(0xff91bc5d))
-                                        in 75..99 -> (Color(0xfffadf5b))
-                                        in 100..124 -> (Color(0xfff4bcb2))
-                                        in 125..149 -> (Color(0xfff0994c))
-                                        in 150..175 -> (Color(0xffd4563f))
-                                        else -> Color.Gray
-                                    }
-                                )
+                                .background(getAqiColor(weatherData.airQualityIndex.currentAqi.toInt()))
                                 .width(80.dp)
                                 .height(35.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -383,6 +372,7 @@ fun DetailScreen(weatherData: WeatherData) {
 @Composable
 fun DetailScreenPreview() {
     MyApp01Theme {
-        DetailScreen(MainViewModel().apply { initialize(LocalContext.current) }.getWeatherData("taipei"))
+        DetailScreen(MainViewModel().apply { initialize(LocalContext.current) }
+            .getWeatherData("taipei"))
     }
 }

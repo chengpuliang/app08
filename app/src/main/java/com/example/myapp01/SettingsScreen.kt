@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsScreen (viewModel: MainViewModel) {
-    var isCH by remember { mutableStateOf(GlobalSettings.getLang()== Lang.CH) }
+fun SettingsScreen(viewModel: MainViewModel) {
+    var isCH by remember { mutableStateOf(GlobalSettings.getLang() == Lang.CH) }
     Column(
         modifier = Modifier
             .padding(18.dp, 0.dp)
@@ -41,20 +41,20 @@ fun SettingsScreen (viewModel: MainViewModel) {
         VSpacer(12.dp)
         IconButton(
             onClick = { viewModel.pop() },
-            modifier = Modifier.padding(0.dp, 24.dp, 0.dp, 0.dp).align(Alignment.End),
+            modifier = Modifier
+                .padding(0.dp, 24.dp, 0.dp, 0.dp)
+                .align(Alignment.End),
 
-        ) {
+            ) {
             Icon(Icons.Default.Done, contentDescription = "Done")
         }
         Text(
-            text = getLangText("設定","Settings"),
+            text = getLangText("設定", "Settings"),
             fontWeight = FontWeight.Bold,
             fontSize = 32.sp
         )
         VSpacer(12.dp)
-        Row (
-
-        ){
+        Row {
             Button(
                 onClick = {
                     GlobalSettings.setLang(Lang.CH)

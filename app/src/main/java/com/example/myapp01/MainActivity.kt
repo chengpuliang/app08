@@ -21,30 +21,32 @@ import androidx.compose.ui.unit.Dp
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
 
-enum class TempMode {C,F}
-enum class Lang {CH,EN}
+enum class TempMode { C, F }
+enum class Lang { CH, EN }
 object GlobalSettings {
     private val _tempMode = MutableStateFlow(TempMode.C)
     fun setTempMode(mode: TempMode) {
         _tempMode.value = mode
     }
+
     fun getTempMode(): TempMode {
         return _tempMode.value
     }
+
     private val _lang = MutableStateFlow(Lang.EN)
     fun setLang(lang: Lang) {
         _lang.value = lang
     }
+
     fun getLang(): Lang {
         return _lang.value
     }
 }
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +77,21 @@ class MainViewModel : ViewModel() {
         if (appContext == null) {
             appContext = context.applicationContext
             cityListOriginal.addAll(parseCityXml(context.resources.getXml(R.xml.city_list)))
-            sharedPreferences = context.getSharedPreferences("App08",Context.MODE_PRIVATE)
-            GlobalSettings.setTempMode(if (sharedPreferences!!.getString("TempMode","C") == "C") TempMode.C else TempMode.F)
-            GlobalSettings.setLang(if (sharedPreferences!!.getString("Lang","CH") == "CH") Lang.CH else Lang.EN)
+            sharedPreferences = context.getSharedPreferences("App08", Context.MODE_PRIVATE)
+            GlobalSettings.setTempMode(
+                if (sharedPreferences!!.getString(
+                        "TempMode",
+                        "C"
+                    ) == "C"
+                ) TempMode.C else TempMode.F
+            )
+            GlobalSettings.setLang(
+                if (sharedPreferences!!.getString(
+                        "Lang",
+                        "CH"
+                    ) == "CH"
+                ) Lang.CH else Lang.EN
+            )
             val jsonArray = JSONArray(sharedPreferences!!.getString("userCityList", "[]"))
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
@@ -89,7 +103,7 @@ class MainViewModel : ViewModel() {
                     )
                 )
             }
-            userCityList.apply { if (isEmpty()) userCityList.add(cityListOriginal.first())}
+            userCityList.apply { if (isEmpty()) userCityList.add(cityListOriginal.first()) }
         }
     }
 
@@ -109,20 +123,24 @@ class MainViewModel : ViewModel() {
         _weatherDataCache[cityName] = weatherData
         return weatherData
     }
-    fun moveCity(from:Int, to:Int) {
+
+    fun moveCity(from: Int, to: Int) {
         val tmp = userCityList[from]
         userCityList[from] = userCityList[to]
         userCityList[to] = tmp
         saveUserCityList()
     }
+
     fun addCity(city: City) {
         userCityList.add(city)
         saveUserCityList()
     }
+
     fun removeCity(index: Int) {
         userCityList.removeAt(index)
         saveUserCityList()
     }
+
     fun saveUserCityList() {
         val jsonArray = JSONArray()
         userCityList.forEach { city ->
@@ -135,6 +153,7 @@ class MainViewModel : ViewModel() {
         }
         sharedPreferences!!.edit { putString("userCityList", jsonArray.toString()) }
     }
+
     fun push(targetScreen: @Composable () -> Unit) {
         screens += targetScreen
     }
@@ -145,8 +164,8 @@ class MainViewModel : ViewModel() {
 
     fun saveGlobalSettings() {
         sharedPreferences!!.edit {
-            putString("TempMode",if (GlobalSettings.getTempMode() == TempMode.C) "C" else "F")
-            putString("Lang",if (GlobalSettings.getLang() == Lang.CH) "CH" else "EN")
+            putString("TempMode", if (GlobalSettings.getTempMode() == TempMode.C) "C" else "F")
+            putString("Lang", if (GlobalSettings.getLang() == Lang.CH) "CH" else "EN")
         }
     }
 }

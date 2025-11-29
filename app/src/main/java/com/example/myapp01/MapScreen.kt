@@ -36,6 +36,8 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
 
 
 @Composable
@@ -57,7 +59,7 @@ fun MapScreen(viewModel: MainViewModel) {
             )
         )
         mapView.controller.setZoom(8)
-        mapView.controller.setCenter(GeoPoint((22 * 1E6).toInt(), (120.5 * 1E6).toInt()))
+        mapView.controller.setCenter(GeoPoint(22.0, 120.5))
         viewModel.userCityList.forEach {
             val startPoint = getGeoPoint(it.name)
             val startMarker = Marker(mapView)
@@ -73,11 +75,13 @@ fun MapScreen(viewModel: MainViewModel) {
             mapView.overlays.add(startMarker)
         }
         delay(1000)
-        mapView.controller.animateTo(GeoPoint((23.5 * 1E6).toInt(), (121 * 1E6).toInt()))
+        mapView.controller.animateTo(GeoPoint(23.5, 121.0))
     }
     Box {
         AndroidView(factory = { ctx ->
             mapView
+        }, onRelease = {
+            it.onDetach()
         })
         Button(
             onClick = {
@@ -135,7 +139,7 @@ fun createNumberedMarker(
     val TEXT_SIZE = 40f // 文字大小
 
     // 2. 創建 Bitmap
-    val bitmap = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(SIZE, SIZE)
     val canvas: Canvas = Canvas(bitmap)
 
     // 3. 繪製圓形背景
@@ -160,5 +164,5 @@ fun createNumberedMarker(
 
     canvas.drawText(number, x, y, textPaint)
 
-    return BitmapDrawable(context.resources, bitmap)
+    return bitmap.toDrawable(context.resources)
 }

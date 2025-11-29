@@ -57,7 +57,6 @@ import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun ListScreen(viewModel: MainViewModel) {
-    val context = LocalContext.current
     var changeOrderMode by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
     val filteredCityList by remember {

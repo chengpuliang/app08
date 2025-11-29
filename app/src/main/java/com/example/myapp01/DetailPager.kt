@@ -53,10 +53,12 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
-                onClick = {viewModel.push { MapScreen(viewModel) }}
+                onClick = { viewModel.push { MapScreen(viewModel) } }
             ) {
-                Icon(painter = painterResource(R.drawable.outline_map_24),
-                    "",)
+                Icon(
+                    painter = painterResource(R.drawable.outline_map_24),
+                    "Map",
+                )
             }
             Row(
                 modifier = Modifier.weight(1f),
@@ -67,7 +69,7 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
                     if (it.fileName == "current.xml") {
                         Icon(
                             painter = painterResource(R.drawable.baseline_my_location_24),
-                            "",
+                            "My location",
                             tint = if (index == pagerState.currentPage) Color.Black else Color.LightGray,
                             modifier = Modifier
                                 .padding(3.dp)
@@ -85,10 +87,12 @@ fun DetailPager(viewModel: MainViewModel, city: List<City>, initPage: Int) {
                 }
             }
             IconButton(
-                onClick = {viewModel.pop()}
+                onClick = { viewModel.pop() }
             ) {
-                Icon(painter = painterResource(R.drawable.baseline_list_24),
-                    "",)
+                Icon(
+                    painter = painterResource(R.drawable.baseline_list_24),
+                    "City list",
+                )
             }
 
         }

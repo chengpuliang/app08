@@ -27,7 +27,7 @@ data class HourlyForecast(
     val temperature: Int = orgTemp.takeWhile { it.isDigit() }.toInt()
         get() {
             if (GlobalSettings.getTempMode() == TempMode.F) {
-                return (field*1.8+32).toInt()
+                return (field * 1.8 + 32).toInt()
             }
             return field
         }
@@ -42,14 +42,14 @@ data class TenDayForecast(
     val lowTemperature: Int = orgLowTemp.takeWhile { it.isDigit() }.toInt()
         get() {
             if (GlobalSettings.getTempMode() == TempMode.F) {
-                return (field*1.8+32).toInt()
+                return (field * 1.8 + 32).toInt()
             }
             return field
         }
     val highTemperature: Int = orgHighTemp.takeWhile { it.isDigit() }.toInt()
         get() {
             if (GlobalSettings.getTempMode() == TempMode.F) {
-                return (field*1.8+32).toInt()
+                return (field * 1.8 + 32).toInt()
             }
             return field
         }
@@ -112,7 +112,12 @@ fun parseWeatherData(parser: XmlPullParser): WeatherData {
 
                     "day" -> {
                         tenDayForecast.add(
-                            TenDayForecast(dayDate, weatherCondition, orgHighTemp = dayHigh, orgLowTemp = dayLow)
+                            TenDayForecast(
+                                dayDate,
+                                weatherCondition,
+                                orgHighTemp = dayHigh,
+                                orgLowTemp = dayLow
+                            )
                         )
                     }
                 }
@@ -178,9 +183,9 @@ fun getColorOnBg(weatherCondition: String): Color {
         Color.White
 }
 
-fun getLangText(ch: String,en: String): String {
-    if (GlobalSettings.getLang() == Lang.CH) return ch
-    else return en
+fun getLangText(ch: String, en: String): String {
+    return if (GlobalSettings.getLang() == Lang.CH) ch
+    else en
 }
 
 fun getGeoPoint(city: String): GeoPoint {
@@ -190,7 +195,7 @@ fun getGeoPoint(city: String): GeoPoint {
         "桃園市" -> GeoPoint(24.93759, 121.2168)
         "台中市" -> GeoPoint(24.23321, 120.9417)
         "台南市" -> GeoPoint(23.1417, 120.2513)
-        else -> GeoPoint(0.0,0.0)
+        else -> GeoPoint(0.0, 0.0)
     }
 }
 
