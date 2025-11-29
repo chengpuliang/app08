@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -72,8 +75,9 @@ fun DetailScreen(weatherData: WeatherData) {
                 .fillMaxSize()
                 .padding(16.dp, 0.dp)
                 .verticalScroll(rememberScrollState())
+                .windowInsetsPadding(WindowInsets.systemBars)
         ) {
-            VSpacer(32.dp)
+            VSpacer(6.dp)
             if (weatherData.isCurrent) {
                 Text(
                     text = "當前位置",
@@ -300,18 +304,7 @@ fun DetailScreen(weatherData: WeatherData) {
                                     style = Stroke(35f, cap = StrokeCap.Round)
                                 )
                                 drawArc(
-                                    brush = SolidColor(
-                                        when (weatherData.airQualityIndex.currentAqi.toInt()) {
-                                            in 0..24 -> (Color(0xff33767d))
-                                            in 25..49 -> (Color(0xff44996b))
-                                            in 50..74 -> (Color(0xff91bc5d))
-                                            in 75..99 -> (Color(0xfffadf5b))
-                                            in 100..124 -> (Color(0xfff4bcb2))
-                                            in 125..149 -> (Color(0xfff0994c))
-                                            in 150..175 -> (Color(0xffd4563f))
-                                            else -> Color.Gray
-                                        }
-                                    ),
+                                    brush = SolidColor(getAqiColor(weatherData.airQualityIndex.currentAqi.toInt())),
                                     startAngle = 150f,
                                     sweepAngle = 240f * (weatherData.airQualityIndex.currentAqi.toFloat() / 175),
                                     useCenter = false,

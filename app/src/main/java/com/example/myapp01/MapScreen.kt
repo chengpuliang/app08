@@ -1,5 +1,11 @@
 package com.example.myapp01
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
@@ -18,23 +24,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+
 
 @Composable
 fun MapScreen(viewModel: MainViewModel) {
     val context = LocalContext.current
-    val mapView = remember { MapView(context)}
+    val mapView = remember { MapView(context) }
     LaunchedEffect(Unit) {
         mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+        mapView.setMultiTouchControls(true)
         mapView.setUseDataConnection(false)
         mapView.setTileSource(
             XYTileSource(
@@ -46,11 +56,24 @@ fun MapScreen(viewModel: MainViewModel) {
                 arrayOf("")
             )
         )
-        mapView.controller.setZoom(10)
-        mapView.controller.setCenter(GeoPoint((21 * 1E6).toInt(),(120 * 1E6).toInt()))
-
+        mapView.controller.setZoom(8)
+        mapView.controller.setCenter(GeoPoint((22 * 1E6).toInt(), (120.5 * 1E6).toInt()))
+        viewModel.userCityList.forEach {
+            val startPoint = getGeoPoint(it.name)
+            val startMarker = Marker(mapView)
+            val weatherData = viewModel.getWeatherData(it.fileName.dropLast(4))
+            startMarker.setPosition(startPoint)
+            startMarker.icon = createNumberedMarker(
+                context,
+                weatherData.airQualityIndex.currentAqi,
+                getAqiColor(weatherData.airQualityIndex.currentAqi.toInt()).toArgb(),
+                Color.White.toArgb()
+            )
+            startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            mapView.overlays.add(startMarker)
+        }
         delay(1000)
-        mapView.controller.animateTo(GeoPoint((23.5 * 1E6).toInt(),(121 * 1E6).toInt()))
+        mapView.controller.animateTo(GeoPoint((23.5 * 1E6).toInt(), (121 * 1E6).toInt()))
     }
     Box {
         AndroidView(factory = { ctx ->
@@ -75,7 +98,7 @@ fun MapScreen(viewModel: MainViewModel) {
         }
         Button(
             onClick = {
-                viewModel.pop()
+                mapView.controller.animateTo(getGeoPoint(viewModel.userCityList.first().name))
             },
             shape = RoundedCornerShape(12.dp),
             contentPadding = PaddingValues(0.dp),
@@ -99,4 +122,43 @@ fun MapScreen(viewModel: MainViewModel) {
 @Preview(showBackground = true, showSystemUi = true)
 fun MapPreview() {
     MapScreen(MainViewModel())
+}
+
+fun createNumberedMarker(
+    context: Context,
+    number: String,
+    bgColor: Int,
+    textColor: Int
+): Drawable {
+    // 1. 定義尺寸 (可根據需求調整，單位為像素)
+    val SIZE = 100 // Marker 圖標的邊長
+    val TEXT_SIZE = 40f // 文字大小
+
+    // 2. 創建 Bitmap
+    val bitmap = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888)
+    val canvas: Canvas = Canvas(bitmap)
+
+    // 3. 繪製圓形背景
+    val circlePaint: Paint = Paint()
+    circlePaint.color = bgColor
+    circlePaint.isAntiAlias = true // 抗鋸齒
+
+    val radius = SIZE / 2f
+    canvas.drawCircle(radius, radius, radius, circlePaint)
+
+    // 4. 繪製數字文字
+    val textPaint: Paint = Paint()
+    textPaint.color = textColor
+    textPaint.textSize = TEXT_SIZE
+    textPaint.textAlign = Paint.Align.CENTER
+    textPaint.isAntiAlias = true
+
+    // 設置文字基準線，使其垂直居中
+    val fm: Paint.FontMetrics = textPaint.fontMetrics
+    val x: Float = canvas.width / 2f
+    val y: Float = (canvas.height / 2f) - (fm.ascent + fm.descent) / 2f
+
+    canvas.drawText(number, x, y, textPaint)
+
+    return BitmapDrawable(context.resources, bitmap)
 }

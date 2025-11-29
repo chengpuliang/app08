@@ -184,5 +184,25 @@ fun getLangText(ch: String,en: String): String {
 }
 
 fun getGeoPoint(city: String): GeoPoint {
-    when (city)
+    return when (city) {
+        "新北市" -> GeoPoint(24.91571, 121.6739)
+        "台北市" -> GeoPoint(25.09108, 121.5598)
+        "桃園市" -> GeoPoint(24.93759, 121.2168)
+        "台中市" -> GeoPoint(24.23321, 120.9417)
+        "台南市" -> GeoPoint(23.1417, 120.2513)
+        else -> GeoPoint(0.0,0.0)
+    }
+}
+
+fun getAqiColor(aqi: Int): Color {
+    return when (aqi) {
+        in 0..24 -> (Color(0xff33767d))
+        in 25..49 -> (Color(0xff44996b))
+        in 50..74 -> (Color(0xff91bc5d))
+        in 75..99 -> (Color(0xfffadf5b))
+        in 100..124 -> (Color(0xfff4bcb2))
+        in 125..149 -> (Color(0xfff0994c))
+        in 150..175 -> (Color(0xffd4563f))
+        else -> Color.Gray
+    }
 }
